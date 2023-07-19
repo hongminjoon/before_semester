@@ -386,6 +386,13 @@ while True:
         call = User_Delete()
         if  call.user_delete() == '0':
             service_no = '0'
+    
+    if service_no != "1" or "2" or "3" or "4":
+        print('\n***********************************')
+        print('잘못된 값을 입력하셨습니다.')
+        print('1, 2, 3, 4 중에 한가지를 입력해주십시요.')
+        print('***********************************')
+        service_no = '0'
 
     if service_no == '0':
         service_no = input('\n은행 서비스 프로그램 입니다.\
@@ -399,10 +406,3 @@ while True:
         if service_no == 'Exit':
             print('\n프로그램을 종료합니다. 감사합니다.')
             break
-    
-    else:
-        print('\n***********************************')
-        print('잘못된 값을 입력하셨습니다.')
-        print('1, 2, 3, 4 중에 한가지를 입력해주십시요.')
-        print('***********************************')
-        service_no = '0'
