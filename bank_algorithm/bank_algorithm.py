@@ -172,7 +172,6 @@ class Create_User: # User 생성 클래스
         except:
             with open('User.txt','a',encoding = 'utf8') as self.User:
                 self.User.write(User_Data)
-        
         return '0'
             
 class Print_User: # 모든 User의 상태를 출력하는 클래스
@@ -189,7 +188,6 @@ class Print_User: # 모든 User의 상태를 출력하는 클래스
             print('-------------------------------------------\n')
         except: # 유저가 1명도 없을 경우
             print('현재 존재하는 User가 없습니다.')
-            pass
 
 class Send_Money: # 랜덤 User에게 송금하는 클래스
     def __init__(self):
@@ -387,7 +385,7 @@ while True:
         if  call.user_delete() == '0':
             service_no = '0'
     
-    if service_no != "1" or "2" or "3" or "4":
+    if service_no != '0' and '1' and '2' and '3' and '4':
         print('\n***********************************')
         print('잘못된 값을 입력하셨습니다.')
         print('1, 2, 3, 4 중에 한가지를 입력해주십시요.')
