@@ -23,7 +23,8 @@ class NMEA_Parsing:
             if self.ser.readable():
                 DATA = self.ser.readline()
                 DATA = DATA.decode(encoding='utf8', errors='ignore')[0:len(DATA) - 1]
-                if DATA[1:6] == Message_ID and len(DATA) >= 50:
+                DATA_split = DATA.split(',')
+                if DATA[1:6] == Message_ID and len(DATA_split) == 15 and len(DATA) >= 70:
                     self.DATA = DATA.strip()
                     self.DATA_split = self.DATA.split(',')
                     self.lat, self.lon = self.DATA_split[2], self.DATA_split[4]
@@ -56,7 +57,7 @@ class NMEAParsing(Node, Projection):
         self.declare_parameters(
             namespace='',
             parameters=[
-                ('port', '/dev/ttyACM0'),  # Set default port here
+                ('port', '/dev/ttyUSB0'),  # Set default port here
                 ('baud_rate', 115200),       # Set default baud rate here
                 ('message_id', 'GNGGA'),   # Set default message ID here
                 ('epsg1', 'epsg:4326'),    # Set default EPSG1 code here
@@ -64,11 +65,11 @@ class NMEAParsing(Node, Projection):
             ]
         )
         
-        port = self.get_parameter('port').get_parameter_value().string_value
-        baud_rate = self.get_parameter('baud_rate').get_parameter_value().integer_value
-        message_id = self.get_parameter('message_id').get_parameter_value().string_value
-        epsg1 = self.get_parameter('epsg1').get_parameter_value().string_value
-        epsg2 = self.get_parameter('epsg2').get_parameter_value().string_value
+        self.port = self.get_parameter('port').get_parameter_value().string_value
+        self.baud_rate = self.get_parameter('baud_rate').get_parameter_value().integer_value
+        self.message_id = self.get_parameter('message_id').get_parameter_value().string_value
+        self.epsg1 = self.get_parameter('epsg1').get_parameter_value().string_value
+        self.epsg2 = self.get_parameter('epsg2').get_parameter_value().string_value
 
         QOS_RKL10V = QoSProfile(
             reliability=QoSReliabilityPolicy.RELIABLE,
@@ -82,13 +83,13 @@ class NMEAParsing(Node, Projection):
             QOS_RKL10V)
 
         self.timer = self.create_timer(1.0, self.publish_nmeaparsing)
-
-        Projection.__init__(self, port, baud_rate, message_id, epsg1, epsg2)
-        Projection.projetction(self)
-        Projection.convert_coordinates(self)
     
     def publish_nmeaparsing(self):
-        print(self.DATA_split)
+        
+        Projection.__init__(self, self.port, self.baud_rate, self.message_id, self.epsg1, self.epsg2)
+        Projection.projetction(self)
+        Projection.convert_coordinates(self)
+        
         msg = Parsing()
         msg.stamp = self.get_clock().now().to_msg()
         msg.gga_raw_data = self.DATA
@@ -107,10 +108,9 @@ class NMEAParsing(Node, Projection):
         msg.gga_sep_unit = self.DATA_split[12]
         msg.gga_diff_age = self.DATA_split[13]
         msg.gga_diff_station = self.DATA_split[13]
-        msg.gga_check_sum = self.DATA_split[14][0:3]
+        msg.gga_check_sum = self.DATA_split[14][len(self.DATA_split[14])-3:]
         msg.gga_utm_lat = float(self.new_lat)
         msg.gga_utm_lon = float(self.new_lon)
-        print(msg.gga_utm_lat)
     
         try: # csv 파일에 utm 좌표 기록
             df = pd.read_csv('/home/vilab/ros2_ws/coordinates.csv', sep=',',
@@ -142,12 +142,6 @@ def main(args=None):
     try:
         try:
             rclpy.spin(nmeaparsing)
-        except UnicodeDecodeError:
-            pass
-        except IndexError:
-            pass
-        except ValueError:
-            pass
         except KeyboardInterrupt:
             nmeaparsing.get_logger().info('Keyboard Interrupt (SIGINT)')
         finally:
@@ -158,5 +152,4 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
-
 
